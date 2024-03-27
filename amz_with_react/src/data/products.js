@@ -5,7 +5,7 @@ import Axios  from "axios";
 export const useProducts = (initialVal = []) => {
     const [products,setProducts] = useState(initialVal);
 
-    const fetchProducts =()=>{
+    const usefetchProducts = () =>{
       const { data, isLoading, isError } = useQuery(
         {
           queryKey:["productFetch"], 
@@ -15,11 +15,23 @@ export const useProducts = (initialVal = []) => {
           refetchOnMount:true,
         },
       );
-        console.log(' isloading:',isLoading);
+      
+        console.log(' isloading:',isLoading, ' backend data in hook: ', data);
         return {isLoading,data}  ;
     }
 
-    return {fetchProducts,products,setProducts}
+    // const { data, isLoading, isError } = useQuery(
+    //   {
+    //     queryKey:["productFetch"], 
+    //     queryFn: async ()=>{
+    //       return await Axios.get("http://localhost:8060/product/api/product").then((res)=>res.data);
+    //     },
+    //     refetchOnMount:false,
+    //   },
+    // );
+
+    //return {data, isLoading};
+    return usefetchProducts;
 };
 
 

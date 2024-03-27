@@ -7,7 +7,7 @@ export const DeliveryOptions=({item})=> {
     const {updateDeliveryOption} = useContext(CartContext);
 
     const handleDeliveryOptionChange=(deliveryOptionId)=>{
-        updateDeliveryOption(item.id, deliveryOptionId);
+        updateDeliveryOption(item.productId, deliveryOptionId);
     }
 
     const html=deliveryOptions.map((deliveryOption)=>{
@@ -20,8 +20,8 @@ export const DeliveryOptions=({item})=> {
         !==0
         ? `$${(deliveryOption.deliveryPriceCents/100).toFixed(2)}` : 'Free';
 
-        const isChecked = (deliveryOption.id===item.deliveryOptionId);
-        //console.log(isChecked);
+        const isChecked = (deliveryOption.id==item.deliveryDate);
+        console.log("is checked: ",isChecked);
 
         return (<div class="delivery-option js-delivery-option"
                 >

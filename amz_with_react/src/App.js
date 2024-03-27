@@ -10,14 +10,10 @@ import { Orders } from './Orders';
 import { useState,useEffect,createContext } from'react';
 import { useCart} from './data/Cart';
 import { useOrderCart } from './data/Orders';
-// import { Register } from './Register';
-// import { Login } from './Login';
 
-//import { store } from './store';
 import { useUsers } from './data/Users';
 import { useSelector } from 'react-redux';
 
-// import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import { useQuery } from '@tanstack/react-query';
 import { useQueryClient } from '@tanstack/react-query'; // Import useQueryClient
 import { useProducts } from './data/products';
@@ -28,16 +24,24 @@ export const ProductsContext = createContext();
 
 function App() {
 
-  const queryClient = useQueryClient(); // Get the QueryClient instance
-  const {fetchProducts, products:p, setProducts} = useProducts([]);
-  const {isLoading, data:products}= fetchProducts();
-  
-  useEffect(()=>{
-      setProducts(products);
-      console.log("products:",p);
-  },[products]);
+  const [products, setProducts] = useState([]);
+  const [isLoading, setLoading] = useState(true);
 
-  const { users, initializeUsers, addToUsers, saveToUsers, validateUser} = useUsers();
+  useEffect(() => {
+    Axios.get("http://localhost:8060/product/api/product")
+      .then((res) => {
+        setProducts(res.data);
+        setLoading(false);
+      })
+      .catch((error)=>{
+        console.error("error...... ", error);
+        setLoading(false);
+      });
+  }, []);
+
+  //console.log(products);
+  const [userIdd,setUserId] = useState(null);
+  const { users, initializeUsers, addToUsers, saveToUsers, validateUser} = useUsers([],setUserId);
 
   useEffect(()=>{
     initializeUsers();
@@ -45,20 +49,23 @@ function App() {
 
   const userId = useSelector(state => state.user.userId);
   const [isLoggedIn, setLoggedIn]=useState(false);
+
   useEffect(()=>{
     setLoggedIn(!!userId);
   },[userId])
 
-  // console.log(userId, isLoggedIn);
+  console.log(userId, isLoggedIn);
 
-  const { cart,cartQuantity, initializeCart,initializeCartQuantity, addToCart, removeFromCart, saveToCart, saveAddCartQuantity, updateDeliveryOption, clearCart} = useCart([],userId);
-  const {orderCart, orderQuantity, initializeOrderCart, initializeOrderQuantity, addToOrderCart, saveToOrderCart, saveAddOrderQuantity} =useOrderCart([], cart, clearCart, userId);
+  const { cart,cartQuantity, initializeCart, initializeCartQuantity, addToCart, removeFromCart, saveAddCartQuantity, updateDeliveryOption} = useCart([],userId);
+  const {orderCart, orderQuantity, initializeOrderCart, initializeOrderQuantity, addToOrderCart, saveToOrderCart, saveAddOrderQuantity} =useOrderCart([], cart, initializeCart, userId);
 
   useEffect(()=>{
-    initializeCart();
-    initializeCartQuantity();
-    initializeOrderCart();
-    initializeOrderQuantity();
+    if(userId){
+      initializeCart();
+      initializeCartQuantity();
+      initializeOrderCart();
+      initializeOrderQuantity();
+    }
   },[userId]);
 
   useEffect(()=>{
@@ -68,7 +75,7 @@ function App() {
 
   useEffect(()=>{
     if(userId)
-      saveAddOrderQuantity();
+      initializeCart();
   },[orderCart]);
 
   // console.log('error:',error);
@@ -80,7 +87,7 @@ function App() {
     <ProductsContext.Provider value={{products}}>
     <UserContext.Provider value={{ users, addToUsers, saveToUsers, validateUser, isLoggedIn}}>
         {isLoggedIn ? (
-          <CartContext.Provider value={{ cart, cartQuantity, initializeCart, initializeCartQuantity, addToCart, removeFromCart, saveToCart, saveAddCartQuantity, updateDeliveryOption, orderCart, orderQuantity, initializeOrderCart, initializeOrderQuantity, addToOrderCart, saveToOrderCart, saveAddOrderQuantity }}>
+          <CartContext.Provider value={{ cart,cartQuantity, initializeCart, initializeCartQuantity, addToCart, removeFromCart, saveAddCartQuantity, updateDeliveryOption, orderCart, orderQuantity, initializeOrderCart, initializeOrderQuantity, addToOrderCart, saveToOrderCart, saveAddOrderQuantity }}>
             <div className="App">
               <Router>
                 <Routes>

@@ -12,7 +12,7 @@ const OrderComponent = ({ dateString, matchingProduct, item }) => {
     };
 
     return (
-        <div className={`cart-item-container js-cart-item-container-${item.id}`}>
+        <div className={`cart-item-container js-cart-item-container-${item.productId}`}>
             <div className="delivery-date">
                 Delivery date: {dateString}
             </div>
@@ -34,7 +34,7 @@ const OrderComponent = ({ dateString, matchingProduct, item }) => {
                     <span className="update-quantity-link link-primary">
                     Update
                     </span>
-                    <span className="delete-quantity-link link-primary js-delete-quantity-link" data-product-id={item.id} onClick={()=>handleDelete(item.id)}>
+                    <span className="delete-quantity-link link-primary js-delete-quantity-link" data-product-id={item.id} onClick={()=>handleDelete(item.productId)}>
                     Delete
                     </span>
                 </div>
@@ -44,7 +44,7 @@ const OrderComponent = ({ dateString, matchingProduct, item }) => {
                 <div className="delivery-options-title">
                     Choose a delivery option:
                 </div>
-                {<DeliveryOptions item={item} key={item.id} />}
+                {<DeliveryOptions item={item} key={item.productId} />}
                 </div>
             </div>
         </div>

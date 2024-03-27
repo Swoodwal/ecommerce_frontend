@@ -2,21 +2,33 @@ import { useCart, deliveryOptions, removeFromCart, saveAddCartQuantity, updateDe
 //import { products } from '../../data/products.js';
 import dayjs from 'dayjs';
 import OrderComponent from './OrderSummary/OrderComponent.js';
-import { useContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { ProductsContext } from '../../App.js';
 import { CartContext } from '../../App.js';
+import Axios from "axios";
 
 export const OrderSummary =()=>{
     const {products} =useContext(ProductsContext);
+   
+    // const [products, setProducts] = useState([]);
 
+    // useEffect( async () => {
+    //   await Axios.get("http://localhost:8060/product/api/product")
+    //     .then((res) => {
+    //       setProducts(res.data);
+    //     })
+    // }, []);
+
+    console.log("products in order summary: ", products);
     const {cart}=useContext(CartContext);
     // console.log("ordersummary");
     // console.log(cart);
-    const OrderComponents = cart.map((item) => {
-        let matchingProduct = products.find((product) => product.id === item.id);
-    
-        const deliveryOptionId = item.deliveryOptionId;
-        const deliveryOption = deliveryOptions.find((option) => option.id === deliveryOptionId);
+    const orderComponents = cart.map((item) => {
+        let matchingProduct = products.find((product) => product.id == item.productId);
+        console.log('matching prod: ',matchingProduct);
+        const deliveryOptionId = item.deliveryDate;
+        const deliveryOption = deliveryOptions.find((option) => option.id == deliveryOptionId);
+        // const deliveryOption = deliveryOptions.find((option) => option.id === 1);
     
         let dateString = '';
         if (deliveryOption) {
@@ -27,7 +39,7 @@ export const OrderSummary =()=>{
     
         return (
           <OrderComponent
-            key={item.id}
+            key={item.productId}
             dateString={dateString}
             matchingProduct={matchingProduct}
             item={item}
@@ -37,7 +49,7 @@ export const OrderSummary =()=>{
 
       return (
         <>
-            {OrderComponents}
+            {orderComponents}
         </>
     );
 }

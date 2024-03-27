@@ -6,16 +6,14 @@ const userSlice = createSlice(
         name:  'user',  //slice name,identity
         initialState: {
             userId: null,
-            email: null
         },
         reducers:{
             setUser: (state, action) => {
-                state.email=action.payload.email;
-                state.userId=action.payload.id;
+                state.userId=action.payload;
+                console.log('action payload: ',action.payload);
             },
             logout: (state) => {
                 state.userId=null;
-                state.email=null;
             }
         }
     }

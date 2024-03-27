@@ -8,22 +8,46 @@ import { Login } from '../Login';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store';
 
-export const AmazonHeader = () => {
+export const AmazonHeader = (props) => {
   
-  const { isLoggedIn } = useContext(UserContext);
-  const { cartQuantity } = useContext(CartContext) || 0;
+    const { isLoggedIn } = useContext(UserContext);
+    const { cartQuantity } = useContext(CartContext) || 0;
+   
+    console.log(isLoggedIn);
+   
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const token = useSelector(state => state.token);
+   
+    const handleLogout = () => {
+      console.log("in handleLogout");
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+      console.log(token);
+      localStorage.clear("token");
+      dispatch(logout());
+      navigate('/');
+    }
+   
+    const func = () => {
+      console.log('func');
+      props.setClick(!props.click);
+    };
+//   const { isLoggedIn } = useContext(UserContext);
+//   const { cartQuantity } = useContext(CartContext) || 0;
 
   console.log(isLoggedIn);
 
   //const email=useSelector((state)=>state.user.email);
   //const loggedIn = email || false;
 
-  const dispatch =useDispatch();
-  const navigate = useNavigate();
-  const handleLogout=()=>{
-    dispatch(logout());
-    navigate('/');
-  }
+//   const dispatch =useDispatch();
+//   const navigate = useNavigate();
+//   const handleLogout=()=>{
+//     dispatch(logout());
+//     navigate('/');
+//   }
 
   return (
     <div className="amazon-header">
@@ -35,10 +59,12 @@ export const AmazonHeader = () => {
         </div>
 
         <div className='amazon-header-middle-section'>
-            <input className="search-bar" type="text" placeholder="Search"/>
+            <input className="search-bar" type="text" placeholder="Search" value = {props.search} onChange={(e) => {
+            props.setSearch(e.target.value)
+            }} />
 
-            <button className="search-button">
-                <img className="search-icon" src="images/icons/search-icon.png"/>
+            <button className="search-button" onClick={func}>
+                <img className="search-icon" src="images/icons/search-icon.png" alt="Search Icon"/>
             </button>
         </div>
 

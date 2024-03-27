@@ -32,14 +32,16 @@ export const Login = () => {
         // close();  // Close the popup
   }
 
-    const onSubmit = (data, handleClose) => {
+    const onSubmit = async (data, handleClose) => {
         try {
-            const user = validateUser(data.email, data.password);
-            if (!user) {
+            const userIdPromise = validateUser(data.email, data.password);
+            const userId = await userIdPromise;
+            if (!userId) {
                 setErrorMessage("Invalid credentials");
             } else {
+                console.log('login id page: ', userId);
                 setErrorMessage(null);
-                dispatch(setUser(user));
+                dispatch(setUser(userId));
                 handleClose();
                 alert('Successfully logged in');
             }

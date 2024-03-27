@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { CartContext } from '../App';
 
 export const ProductComponent = ({product}) => {
@@ -6,9 +6,12 @@ export const ProductComponent = ({product}) => {
   const context=useContext(CartContext) || null;
   const addToCart = context?.addToCart;
 
+  const [productQuantity,setProductQuantity] = useState(product.quantity);
+
   const handleAdd=(id) => {
-    if(addToCart){
+    if(addToCart && productQuantity){
       addToCart(id);
+      setProductQuantity((prev)=>prev-1);
     }
   }
 

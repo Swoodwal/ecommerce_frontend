@@ -1,15 +1,46 @@
 import { useState} from "react";
 // import { useQuery } from "@tanstack/react-query";
 import Axios from "axios";
+import { get } from "react-hook-form";
+
+// get user cart=>"http://localhost:8060/cart/api/cart/userId"
+// create user cart => "http://localhost:8060/cart/api/cart/create"
+// delete user cart => "http://localhost:8060/cart/api/cart/delete/userId"
+// update user cart => "http://localhost:8060/cart/api/cart/update/userId"
 
 export const useCart = (initialVal = [], userId) => {
 
+//   [
+//     {
+//         "cts": [
+//             {
+//                 "productId": "87",
+//                 "quantity": 50,
+//                 "deliveryDate": "2024-03-15"
+//             },
+//             {
+//                 "productId": "82",
+//                 "quantity": 13,
+//                 "deliveryDate": "2024-03-15"
+//             }
+//         ]
+//     }
+// ]
   const [cart, setCart] = useState(initialVal);
   const [cartQuantity,setCartQuantity] = useState(0);
+  const [cartInDatabase, setCartInDatabase] = useState(false);
 
-  const getCart = async (cartItem) => {
-    const data = (await Axios.get("http://localhost:8060/cart/api/cart/12",requestData).then((res)=>res.data));
-    console.log( 'data:', data);
+  const getCart = async () => {
+    try{
+      const data = (await Axios.get(`http://localhost:8060/cart/api/cart/${userId}`).then((res)=>res.data));
+      // await new Promise(resolve => setTimeout(resolve, 10000));
+      console.log( 'get data:', data);
+      return data;
+    }
+    catch(error){
+      console.log('cart for user not created yet');
+      return null;
+    }
   }
 
   const postCart = async (cartItem) => {
@@ -18,43 +49,53 @@ export const useCart = (initialVal = [], userId) => {
     console.log( ' sent post data:', data);
   }
 
-  const putCart = async (cartItem) => {
-    const requestData =cartItem;
+  const deleteCart = async (productId) =>{
+    const data = (await Axios.delete(`http://localhost:8060/cart/api/cart/delete/${userId}`,{ data: { productId: productId }}).then((res)=>res.data));
+    console.log('deleted data: ',data);
+  }
+
+  const updateCart = async (cartItem) =>{
+    const requestData = cartItem;
     const data = (await Axios.put(`http://localhost:8060/cart/api/cart/update/${userId}`,requestData).then((res)=>res.data));
-    console.log( ' sent put data:', data);
+    console.log('updated cart: ',data);
+  }
+
+  const initializeCart = async ()=>{
+    const rawCartData = await getCart() || [];
+    console.log("raw get data: ", rawCartData);
+    const cartData= (rawCartData && rawCartData[0]?.["cts"]) || [];
+    setCart(cartData);  
+    if(rawCartData.length===0){
+      setCartInDatabase(false);
+    }
+    else{
+      setCartInDatabase(true);
+    }
+  }
+
+  const initializeCartQuantity =()=>{
+      saveAddCartQuantity();
   }
 
 // Function to set cart for a user in local storage
-  const setCartForUser = (cart, itemForDB, post) => {
+  const setCartForUser = (updatedCart, itemForDB) => {
     const carts = JSON.parse(localStorage.getItem("carts")) || {};
-    carts[userId] = cart;
+    carts[userId] = updatedCart;
     localStorage.setItem("carts", JSON.stringify(carts));
-    post? postCart(itemForDB): putCart(itemForDB);
-  };
 
-// Function to get cart for a user from local storage
-  const getCartForUser = () => {
-    const carts = JSON.parse(localStorage.getItem("carts")) || {};
-    return carts[userId] || [];
-  };
 
-  const initializeCart =()=>{
-    setCart(getCartForUser());  
-  }
-  const initializeCartQuantity =()=>{
-      saveAddCartQuantity();
-    // setCartQuantity(JSON.parse(localStorage.getItem('cartQuantity')) || 0 );
-  }
-
-  const saveToCart = (updatedCart,itemForDB, post) => {
-    setCartForUser(updatedCart, itemForDB, post);
-    console.log("saving to cart");
-    console.log('use state cart: ',cart);
-    console.log('local cart: ', (localStorage.getItem("carts"))[userId]);
+    if(!cartInDatabase){
+      postCart(itemForDB);
+      setCartInDatabase(true);
+    }
+    else{
+      updateCart(itemForDB);
+    }
   };
 
   const saveAddCartQuantity = () => {
     let cartQuantity = 0;
+    console.log('use state cart: ', cart);
     cart.forEach((item) => {
       cartQuantity += item.quantity;
     });
@@ -62,13 +103,15 @@ export const useCart = (initialVal = [], userId) => {
     setCartQuantity(cartQuantity);
   };
 
-  const addToCart = (productId) => {
-    setCart((prevCart) => {
-      let matchingItem, itemfordb;
-      let post;
 
-      const updatedCart = prevCart.map((item) => {
-        if (item.id === productId) {
+  const addToCart = (productId) => {
+    setCart((prevCart) => 
+    {
+      let tempCart;
+      let matchingItem, itemfordb;
+      // const prevCart = [...cart];
+      const updatedCart = cart.map((item) => {
+        if (item.productId === productId) {
           matchingItem = { ...item, quantity: item.quantity + 1 };
           return matchingItem;
         }
@@ -77,65 +120,73 @@ export const useCart = (initialVal = [], userId) => {
   
       if (!matchingItem) {
         matchingItem = {
-          id: productId,
+          productId: productId,
           quantity: 1,
-          deliveryOptionId: 1,
+          deliveryDate: "1"
         };
 
         itemfordb = {
           productId: productId,
           quantity: 1,
-          deliveryDate: "12 Aug",
+          deliveryDate: "1"
         };
-        post = false;
+        updatedCart.push(matchingItem);
+        // tempCart=updateCart;
       }
       else{
         itemfordb={
           productId: productId,
           quantity :matchingItem.quantity,
-          deliveryDate: "12 Aug"
+          deliveryDate: "1"
         }
-        post = false;
       }
       
-      updatedCart.push(matchingItem);
-      saveToCart(updatedCart,itemfordb,post);
+      setCartForUser(updatedCart,itemfordb);
   
       return updatedCart;
     });
   };
 
   const removeFromCart = (productId) => {
-    const matchingIndex = cart.findIndex((item) => item.id === productId);
+    const matchingIndex = cart.findIndex((item) => item.productId === productId);
     if (matchingIndex !== -1) {
       cart.splice(matchingIndex, 1);
-      saveToCart(cart);
+      //setCartForUser(cart);
+      deleteCart(productId);
       setCart([...cart]);
     }
   };
 
-  const updateDeliveryOption = (productId, deliveryOptionId) => {
+  const updateDeliveryOption = (productId, deliveryDate) => {
+    let itemTemp;
     const updatedCart = cart.map((item) => {
-      if (item.id === productId) {
-        return { ...item, deliveryOptionId };
+      if (item.productId === productId) {
+        itemTemp = { ...item, deliveryDate }
+        return { ...item, deliveryDate };
       }
       return item;
     });
-    saveToCart(updatedCart);
+
+    let itemfordb={
+      productId: productId,
+      quantity :itemTemp.quantity,
+      deliveryDate: itemTemp.deliveryDate
+    };
+    setCartForUser(updatedCart,itemfordb);
     setCart(updatedCart);
   };
 
-  const clearCart = () =>{
-    const localCarts = JSON.parse(localStorage.getItem("carts")) || {};
-    delete localCarts[userId];
-    localStorage.setItem("carts", JSON.stringify(localCarts));
-    // localStorage.removeItem('cart');
-    localStorage.removeItem('cartQuantity');
-    setCart([]);
-    setCartQuantity(0);
-  }
+  // const clearCart = () =>{
+  //   const localCarts = JSON.parse(localStorage.getItem("carts")) || {};
+  //   delete localCarts[userId];
+  //   localStorage.setItem("carts", JSON.stringify(localCarts));
+  //   // localStorage.removeItem('cart');
+  //   localStorage.removeItem('cartQuantity');
+  //   setCart([]);
+  //   setCartQuantity(0);
+  // }
 
-  return { cart,cartQuantity, initializeCart,initializeCartQuantity, addToCart, removeFromCart, saveToCart, saveAddCartQuantity, updateDeliveryOption, clearCart, updateDeliveryOption};
+  return { cart,cartQuantity, initializeCart,initializeCartQuantity, addToCart, removeFromCart, saveAddCartQuantity, updateDeliveryOption};
 };
 
 // export let cart=JSON.parse(localStorage.getItem('cart')) || [{id:"e43638ce-6aa0-4b85-b27f-e1d07eb678c6", quantity:1,  deliveryOptionId:2}];

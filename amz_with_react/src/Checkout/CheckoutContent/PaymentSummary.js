@@ -18,13 +18,14 @@ export const PaymentSummary = () => {
     cart.forEach((item)=>{
 
         const matchingProduct=products.find((product)=>{
-            return product.id === item.id;
+            return product.id === item.productId;
         });
 
         itemsPrice+=item.quantity*matchingProduct.price;
     
         const deliveryOption=deliveryOptions.find((deliveryOption)=>{
-            return deliveryOption.id == item.deliveryOptionId;
+            return deliveryOption.id == item.deliveryDate;
+            // return deliveryOption.id == 1;
         });
         //console.log(deliveryOption);
         shippingPrice+=deliveryOption.deliveryPriceCents;
@@ -42,7 +43,7 @@ export const PaymentSummary = () => {
 
     function handlePlaceOrder(taxPrice){
       if (taxPrice){
-        addToOrderCart(taxPrice);
+        addToOrderCart(taxPrice,"18-03-2024");
         navigate('/orders');
       }
     }

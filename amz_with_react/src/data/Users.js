@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
+import Axios from "axios";
 
 // export let users=JSON.parse(localStorage.getItem('users'))||
 //                 [
@@ -13,18 +14,33 @@ import { v4 as uuidv4 } from 'uuid';
 //                     }
 //                 ];
 
-export const useUsers = (initialVal = []) => {
+export const useUsers = (initialVal = [],setUserId) => {
     const [users, setUsers] = useState(initialVal);
+
+    const getUser = async (email, password) => {
+        const requestBody = {email:email, password:password};
+        const data = (await Axios.post(`http://localhost:8060/user/api/user/add`, requestBody).then((res)=>res.data));
+        // await new Promise(resolve => setTimeout(resolve, 10000));
+        console.log( 'get user data:', data);
+        return data;
+      }
+    
+    const postUser = async (newUser) => {
+        const requestData = newUser;
+        const data = (await Axios.post("http://localhost:8060/user/api/user",requestData).then((res)=>res.data));
+        console.log( ' sent user data:', data);
+    }
 
     const initializeUsers =()=>{
         setUsers(JSON.parse(localStorage.getItem('users')) || []);  
     }
 
-    const saveToUsers = (updatedUsers) => {
+    const saveToUsers = (updatedUsers,newUser) => {
         localStorage.setItem("users", JSON.stringify(updatedUsers));
         console.log("save to users");
         console.log(users);
         console.log(localStorage.getItem("users"));
+        postUser(newUser);
     };
 
     // Function to generate a random orderId
@@ -44,19 +60,24 @@ export const useUsers = (initialVal = []) => {
         }
         const newUser = {
             id: generateUserId(),
-            userName: userName,
+            username: userName,
             email: email,
             address: address,
             password: password,
             };
         setUsers((prevUsers) => [...prevUsers, newUser]);
-        saveToUsers([...users, newUser]);
+        saveToUsers([...users, newUser], newUser);
         return true;
     };
 
-    const validateUser = (email, password) => {
-        const user = users.find(user => user.email == email && user.password == password);
-        return user; // Returns the matched user or null if not found
+    const validateUser = async (email, password) => {
+        const data = await getUser(email, password);
+        console.log('user data for validation: ', data);
+        const id = data?.id || null;
+        console.log('validated id: ',id);
+        //setUserId(id);
+        //const user = users.find(user => user.email == email && user.password == password);
+        return id; // Returns the matched user or null if not found
     };
 
     return {users, initializeUsers, addToUsers, saveToUsers, validateUser};

@@ -3,6 +3,8 @@ import React from 'react';
 import { useContext } from 'react';
 import { ProductsContext } from '../../App';
 import { CartContext } from '../../App';
+import dayjs from 'dayjs';
+import { deliveryOptions } from '../../data/Cart';
 
 export const OrderComponent = ({order}) => {
 
@@ -12,6 +14,8 @@ export const OrderComponent = ({order}) => {
   // const totalPrice = order.orderDetails.reduce((accumulator, item) => {
   //   return accumulator + item.priceCents;
   // }, 0);
+  // Function to calculate delivery date based on delivery time
+ 
 
   function formatPrice(cents){
     return (Math.round(cents)/100).toFixed(2);
@@ -33,7 +37,7 @@ export const OrderComponent = ({order}) => {
 
       <div class="order-header-right-section">
         <div class="order-header-label">Order ID:</div>
-        <div>{order.id}</div>
+        <div>{order.orderId}</div>
       </div>
     </div>
 
@@ -44,7 +48,7 @@ export const OrderComponent = ({order}) => {
             })
 
             return (
-            <OrderProduct  matchingProduct={matchingProduct} orderProduct= {orderProduct}/>
+            <OrderProduct  matchingProduct={matchingProduct} orderProduct={orderProduct}/>
             )
         })} 
     </div>
@@ -54,6 +58,14 @@ export const OrderComponent = ({order}) => {
 
 
 const OrderProduct=({matchingProduct,orderProduct})=>{
+  const calculateDeliveryDate = (deliveryTime) => {
+    return dayjs().add(deliveryTime, 'day').format('dddd, MMMM D');
+  };
+  const deliveryOption = deliveryOptions.find((option)=>{
+    return option.id==orderProduct.deliveryOptionId;
+  })
+  const deliveryDate = calculateDeliveryDate(deliveryOption.deliveryTime);
+
   return (
     <>
       <div class="product-image-container">
@@ -65,7 +77,7 @@ const OrderProduct=({matchingProduct,orderProduct})=>{
               {matchingProduct.name}
           </div>
           <div class="product-delivery-date">
-              Arriving on: {orderProduct.deliveryOptionId}
+              Arriving on: {deliveryDate}
           </div>
           <div class="product-quantity">
               Quantity: {orderProduct.quantity}
